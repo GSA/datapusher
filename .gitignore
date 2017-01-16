@@ -28,4 +28,8 @@ pip-log.txt
 *.sqlite
 *.sqlite3
 
+#IDE
+.idea
+
+# Mac
 .DS_Store

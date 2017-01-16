@@ -292,7 +292,7 @@ def push_to_datastore(task_id, input, dry_run=False):
 
     data = input['metadata']
 
-    ckan_url = data['ckan_url']
+    ckan_url = data['ckan_url'].replace('https://', 'http://')  # bsp works through port 80 on local
     resource_id = data['resource_id']
     api_key = input.get('api_key')
 
