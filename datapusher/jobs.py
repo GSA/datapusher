@@ -9,7 +9,6 @@ import urlparse
 import itertools
 import datetime
 import locale
-import pprint
 import logging
 import decimal
 import hashlib
@@ -17,7 +16,6 @@ import cStringIO
 import time
 
 import messytables
-from slugify import slugify
 
 import ckanserviceprovider.job as job
 import ckanserviceprovider.util as util
@@ -244,11 +242,15 @@ def get_resource(resource_id, ckan_url, api_key):
     Gets available information about the resource from CKAN
     """
     url = get_url('resource_show', ckan_url)
-    r = requests.post(url,
-                      data=json.dumps({'id': resource_id}),
-                      headers={'Content-Type': 'application/json',
-                               'Authorization': api_key}
-                      )
+    # r = requests.post(url,
+    r = requests.get(url + '?id=' + resource_id,
+                     # data=json.dumps({'id': resource_id}),
+                     headers={
+                         # 'Content-Type': 'application/json',
+                         'Authorization': api_key
+                     }
+                     )
+    # log.debug('Trying to get resource info by id: %s', resource_id)
     check_response(r, url, 'CKAN')
 
     return r.json()['result']
@@ -299,14 +301,14 @@ def push_to_datastore(task_id, input, dry_run=False):
     try:
         resource = get_resource(resource_id, ckan_url, api_key)
     except util.JobError, e:
-        #try again in 5 seconds just incase CKAN is slow at adding resource
+        # try again in 5 seconds just in case CKAN is slow at adding resource
         time.sleep(5)
         resource = get_resource(resource_id, ckan_url, api_key)
 
     # fetch the resource data
     logger.info('Fetching from: {0}'.format(resource.get('url')))
     try:
-        request = urllib2.Request(resource.get('url'))
+        request = urllib2.Request(resource.get('url').replace('https://inventory', 'http://inventory'))
 
         if resource.get('url_type') == 'upload':
             # If this is an uploaded file to CKAN, authenticate the request,
@@ -332,7 +334,7 @@ def push_to_datastore(task_id, input, dry_run=False):
     if cl and int(cl) > MAX_CONTENT_LENGTH:
         raise util.JobError(
             'Resource too large to download: {cl} > max ({max_cl}).'.format(
-            cl=cl, max_cl=MAX_CONTENT_LENGTH))
+                cl=cl, max_cl=MAX_CONTENT_LENGTH))
 
     ct = response.info().getheader('content-type').split(';', 1)[0]
 
@@ -341,7 +343,7 @@ def push_to_datastore(task_id, input, dry_run=False):
     f.seek(0)
 
     if (resource.get('hash') == file_hash
-            and not data.get('ignore_hash')):
+        and not data.get('ignore_hash')):
         logger.info("The file hash hasn't changed: {hash}.".format(
             hash=file_hash))
         return
@@ -382,6 +384,7 @@ def push_to_datastore(task_id, input, dry_run=False):
                     continue
                 data_row[column_name] = cell.value
             yield data_row
+
     result = row_iterator()
 
     '''
