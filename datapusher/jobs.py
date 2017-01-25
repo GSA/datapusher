@@ -122,6 +122,10 @@ def check_response(response, request_url, who, good_status=(201, 200), ignore_no
     message = '{who} bad response. Status code: {code} {reason}. At: {url}.'
     try:
         if not response.status_code in good_status:
+            logging.debug(response.status_code)
+            logging.debug(response.reason)
+            logging.debug(response.text)
+
             json_response = response.json()
             if not ignore_no_success or json_response.get('success'):
                 try:
@@ -173,7 +177,7 @@ def delete_datastore_resource(resource_id, api_key, ckan_url):
         response = requests.post(delete_url,
                                  data=json.dumps({'id': resource_id,
                                                   'force': True}),
-                                 headers={'Content-Type': 'application/json',
+                                 headers={'Content-Type': 'application/x-www-form-urlencoded',
                                           'Authorization': api_key}
                                  )
         check_response(response, delete_url, 'CKAN',
@@ -188,12 +192,14 @@ def datastore_resource_exists(resource_id, api_key, ckan_url):
         response = requests.post(search_url,
                                  params={'id': resource_id,
                                          'limit': 0},
-                                 headers={'Content-Type': 'application/json',
+                                 headers={'Content-Type': 'application/x-www-form-urlencoded',
                                           'Authorization': api_key}
                                  )
         if response.status_code == 404:
+            logging.debug('Resource not found in db, creating')
             return False
         elif response.status_code == 200:
+            logging.debug('Resource exists in db')
             return True
         else:
             raise util.JobError('Error getting datastore resource.')
@@ -211,10 +217,11 @@ def send_resource_to_datastore(resource, headers, records, api_key, ckan_url):
                'records': records}
 
     name = resource.get('name')
+    logging.debug('Creating datastore resource')
     url = get_url('datastore_create', ckan_url)
     r = requests.post(url,
                       data=json.dumps(request, cls=DatastoreEncoder),
-                      headers={'Content-Type': 'application/json',
+                      headers={'Content-Type': 'application/x-www-form-urlencoded',
                                'Authorization': api_key},
                       )
     check_response(r, url, 'CKAN DataStore')
@@ -231,7 +238,7 @@ def update_resource(resource, api_key, ckan_url):
     r = requests.post(
         url,
         data=json.dumps(resource),
-        headers={'Content-Type': 'application/json',
+        headers={'Content-Type': 'application/x-www-form-urlencoded',
                  'Authorization': api_key})
 
     check_response(r, url, 'CKAN')
@@ -242,14 +249,13 @@ def get_resource(resource_id, ckan_url, api_key):
     Gets available information about the resource from CKAN
     """
     url = get_url('resource_show', ckan_url)
-    # r = requests.post(url,
-    r = requests.get(url + '?id=' + resource_id,
-                     # data=json.dumps({'id': resource_id}),
-                     headers={
-                         # 'Content-Type': 'application/json',
-                         'Authorization': api_key
-                     }
-                     )
+    r = requests.post(url,
+                      data=json.dumps({'id': resource_id}),
+                      headers={
+                          'Content-Type': 'application/x-www-form-urlencoded',
+                          'Authorization': api_key
+                      }
+                      )
     # log.debug('Trying to get resource info by id: %s', resource_id)
     check_response(r, url, 'CKAN')
 
