@@ -177,7 +177,7 @@ def delete_datastore_resource(resource_id, api_key, ckan_url):
         delete_url = get_url('datastore_delete', ckan_url)
         data = json.dumps({'id': resource_id,
                            'force': True})
-        data = urllib2.quote(data).encode("utf-8")
+        data = urllib2.quote(data)
         response = requests.post(delete_url,
                                  data=data,
                                  headers={'Content-Type': 'application/x-www-form-urlencoded',
@@ -194,7 +194,7 @@ def datastore_resource_exists(resource_id, api_key, ckan_url):
         search_url = get_url('datastore_search', ckan_url)
         data = {'id': resource_id,
                 'limit': 0}
-        data = urllib2.quote(data).encode("utf-8")
+        data = urllib2.quote(data)
         response = requests.post(search_url,
                                  params=data,
                                  headers={'Content-Type': 'application/x-www-form-urlencoded',
@@ -225,7 +225,7 @@ def send_resource_to_datastore(resource, headers, records, api_key, ckan_url):
     logging.debug('Creating datastore resource')
     url = get_url('datastore_create', ckan_url)
     data = json.dumps(request, cls=DatastoreEncoder)
-    data = urllib2.quote(data).encode("utf-8")
+    data = urllib2.quote(data)
     r = requests.post(url,
                       data=data,
                       headers={'Content-Type': 'application/x-www-form-urlencoded',
@@ -243,7 +243,7 @@ def update_resource(resource, api_key, ckan_url):
 
     url = get_url('resource_update', ckan_url)
     data = json.dumps(resource)
-    data = urllib2.quote(data).encode("utf-8")
+    data = urllib2.quote(data)
     r = requests.post(
         url,
         data=data,
@@ -259,7 +259,7 @@ def get_resource(resource_id, ckan_url, api_key):
     """
     url = get_url('resource_show', ckan_url)
     data = json.dumps({'id': resource_id})
-    data = urllib2.quote(data).encode("utf-8")
+    data = urllib2.quote(data)
     r = requests.post(url,
                       data=data,
                       headers={
