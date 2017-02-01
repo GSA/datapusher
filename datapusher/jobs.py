@@ -134,6 +134,7 @@ def check_response(response, request_url, who, good_status=(201, 200), ignore_no
                     message = message.format(
                         who=who, code=response.status_code,
                         reason=response.reason, url=request_url)
+                logging.warning("HTTPError: %s : %s ", response.status_code, response.text)
                 raise HTTPError(
                     message, status_code=response.status_code,
                     request_url=request_url, response=response.text)
@@ -174,9 +175,11 @@ class DatastoreEncoder(json.JSONEncoder):
 def delete_datastore_resource(resource_id, api_key, ckan_url):
     try:
         delete_url = get_url('datastore_delete', ckan_url)
+        data = json.dumps({'id': resource_id,
+                           'force': True})
+        data = urllib2.quote(data).encode("utf-8")
         response = requests.post(delete_url,
-                                 data=json.dumps({'id': resource_id,
-                                                  'force': True}),
+                                 data=data,
                                  headers={'Content-Type': 'application/x-www-form-urlencoded',
                                           'Authorization': api_key}
                                  )
@@ -189,9 +192,11 @@ def delete_datastore_resource(resource_id, api_key, ckan_url):
 def datastore_resource_exists(resource_id, api_key, ckan_url):
     try:
         search_url = get_url('datastore_search', ckan_url)
+        data = {'id': resource_id,
+                'limit': 0}
+        data = urllib2.quote(data).encode("utf-8")
         response = requests.post(search_url,
-                                 params={'id': resource_id,
-                                         'limit': 0},
+                                 params=data,
                                  headers={'Content-Type': 'application/x-www-form-urlencoded',
                                           'Authorization': api_key}
                                  )
@@ -219,8 +224,10 @@ def send_resource_to_datastore(resource, headers, records, api_key, ckan_url):
     name = resource.get('name')
     logging.debug('Creating datastore resource')
     url = get_url('datastore_create', ckan_url)
+    data = json.dumps(request, cls=DatastoreEncoder)
+    data = urllib2.quote(data).encode("utf-8")
     r = requests.post(url,
-                      data=json.dumps(request, cls=DatastoreEncoder),
+                      data=data,
                       headers={'Content-Type': 'application/x-www-form-urlencoded',
                                'Authorization': api_key},
                       )
@@ -235,9 +242,11 @@ def update_resource(resource, api_key, ckan_url):
     resource['url_type'] = 'datapusher'
 
     url = get_url('resource_update', ckan_url)
+    data = json.dumps(resource)
+    data = urllib2.quote(data).encode("utf-8")
     r = requests.post(
         url,
-        data=json.dumps(resource),
+        data=data,
         headers={'Content-Type': 'application/x-www-form-urlencoded',
                  'Authorization': api_key})
 
@@ -249,8 +258,10 @@ def get_resource(resource_id, ckan_url, api_key):
     Gets available information about the resource from CKAN
     """
     url = get_url('resource_show', ckan_url)
+    data = json.dumps({'id': resource_id})
+    data = urllib2.quote(data).encode("utf-8")
     r = requests.post(url,
-                      data=json.dumps({'id': resource_id}),
+                      data=data,
                       headers={
                           'Content-Type': 'application/x-www-form-urlencoded',
                           'Authorization': api_key
