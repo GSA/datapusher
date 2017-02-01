@@ -192,11 +192,9 @@ def delete_datastore_resource(resource_id, api_key, ckan_url):
 def datastore_resource_exists(resource_id, api_key, ckan_url):
     try:
         search_url = get_url('datastore_search', ckan_url)
-        data = {'id': resource_id,
-                'limit': 0}
-        data = urllib2.quote(data)
         response = requests.post(search_url,
-                                 params=data,
+                                 params={'id': resource_id,
+                                         'limit': 0},
                                  headers={'Content-Type': 'application/x-www-form-urlencoded',
                                           'Authorization': api_key}
                                  )
