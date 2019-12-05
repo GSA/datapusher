@@ -309,7 +309,7 @@ def push_to_datastore(task_id, input, dry_run=False):
 
     data = input['metadata']
 
-    ckan_url = data['ckan_url'].replace('https://', 'http://')  # bsp works through port 80 on local
+    ckan_url = data['ckan_url']
     resource_id = data['resource_id']
     api_key = input.get('api_key')
 
@@ -323,7 +323,7 @@ def push_to_datastore(task_id, input, dry_run=False):
     # fetch the resource data
     logger.info('Fetching from: {0}'.format(resource.get('url')))
     try:
-        request = urllib2.Request(resource.get('url').replace('https://inventory', 'http://inventory'))
+        request = urllib2.Request(resource.get('url'))
 
         if resource.get('url_type') == 'upload':
             # If this is an uploaded file to CKAN, authenticate the request,
