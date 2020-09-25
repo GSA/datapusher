@@ -1,0 +1,17 @@
+---
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/python:2
+    steps:
+      - checkout
+      - run: sudo apt-get install -y libmagic-dev
+      - run: pip install -r requirements-dev.txt
+
+
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - test
